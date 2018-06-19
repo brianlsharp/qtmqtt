@@ -82,7 +82,12 @@ int main(int argc, char *argv[])
                                      "version", "3");
     parser.addOption(versionOption);
 
-    parser.process(a.arguments());
+    QCommandLineOption publishOption( QStringList() << "p" << "publish",
+        QStringLiteral( "publish" ),
+        "publish", "" );
+    parser.addOption( publishOption );
+
+    parser.process( a.arguments() );
 
     const QString debugLog = QString::fromLatin1("qtdemo.websocket.mqtt*=%1").arg(
                                 parser.isSet(debugOption) ? "true" : "false");
@@ -103,6 +108,13 @@ int main(int argc, char *argv[])
         return -2;
     }
 
-    clientsub.connectAndSubscribe();
+    QString lPublishString = parser.value( publishOption );
+    if ( lPublishString.isEmpty() )
+         clientsub.connectAndSubscribe();
+    else
+    {
+        printf( "publishing %s\n", parser.value( publishOption ).toStdString().c_str() );
+        clientsub.connectAndPublish( lPublishString );
+    }
     return a.exec();
 }

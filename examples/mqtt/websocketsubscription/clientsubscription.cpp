@@ -119,3 +119,49 @@ void ClientSubscription::handleMessage(const QByteArray &msgContent)
     // Should happen when the internal device has ready read?
     qInfo() << "New message:" << msgContent;
 }
+
+void ClientSubscription::connectAndPublish( const QString& message )
+{
+    printf( "Publish()\n" );
+    qCDebug( lcWebSocketMqtt ) << "Connecting to broker at " << m_url;
+
+    m_device.setUrl( m_url );
+    m_device.setProtocol( m_version == 3 ? "mqttv3.1" : "mqtt" );
+
+    connect( &m_device, &WebSocketIODevice::socketConnected, this, [this] () {
+        qCDebug( lcWebSocketMqtt ) << "WebSocket connected, initializing MQTT connection.";
+
+        m_client.setProtocolVersion( m_version == 3 ? QMqttClient::MQTT_3_1 : QMqttClient::MQTT_3_1_1 );
+        m_client.setTransport( &m_device, QMqttClient::IODevice );
+
+        connect( &m_client, &QMqttClient::connected, this, [this] () 
+        {
+            qCDebug( lcWebSocketMqtt ) << "MQTT connection established";
+
+            //m_subscription = m_client.subscribe( m_topic );
+            //if ( !m_subscription ) {
+            //    qDebug() << "Failed to subscribe to " << m_topic;
+            //    emit errorOccured();
+            //}
+
+            //connect( m_subscription, &QMqttSubscription::stateChanged,
+            //    [] ( QMqttSubscription::SubscriptionState s ) {
+            //    qCDebug( lcWebSocketMqtt ) << "Subscription state changed:" << s;
+            //} );
+
+            //connect( m_subscription, &QMqttSubscription::messageReceived,
+            //    [this] ( QMqttMessage msg ) {
+            //    handleMessage( msg.payload() );
+            //} );
+
+            printf( "about to publish\n" );
+            m_client.publish( QMqttTopicName( m_topic ), "blah" );
+            printf( "published\n" );
+
+        });
+
+        m_client.connectToHost();
+    } );
+    if ( !m_device.open( QIODevice::ReadWrite ) )
+        qDebug() << "Could not open socket device";
+}

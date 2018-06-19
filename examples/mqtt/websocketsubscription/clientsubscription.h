@@ -61,7 +61,7 @@ class ClientSubscription : public QObject
 {
     Q_OBJECT
 public:
-    ClientSubscription(QObject *parent = nullptr);
+    ClientSubscription(QObject *parent = nullptr); 
 
     void setUrl(const QUrl &url); // ie ws://broker.hivemq.com:8000/mqtt
     void setTopic(const QString &topic);
@@ -72,7 +72,8 @@ signals:
 
 public slots:
     void connectAndSubscribe();
-    void handleMessage(const QByteArray &msgContent);
+    void connectAndPublish( const QString& message);
+    void handleMessage( const QByteArray &msgContent );
 
 private:
     QMqttClient m_client;
