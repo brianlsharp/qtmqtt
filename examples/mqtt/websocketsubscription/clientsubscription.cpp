@@ -122,6 +122,7 @@ void ClientSubscription::handleMessage(const QByteArray &msgContent)
 
 void ClientSubscription::connectAndPublish( const QString& message )
 {
+    mMessage = message;
     printf( "Publish()\n" );
     qCDebug( lcWebSocketMqtt ) << "Connecting to broker at " << m_url;
 
@@ -138,24 +139,8 @@ void ClientSubscription::connectAndPublish( const QString& message )
         {
             qCDebug( lcWebSocketMqtt ) << "MQTT connection established";
 
-            //m_subscription = m_client.subscribe( m_topic );
-            //if ( !m_subscription ) {
-            //    qDebug() << "Failed to subscribe to " << m_topic;
-            //    emit errorOccured();
-            //}
-
-            //connect( m_subscription, &QMqttSubscription::stateChanged,
-            //    [] ( QMqttSubscription::SubscriptionState s ) {
-            //    qCDebug( lcWebSocketMqtt ) << "Subscription state changed:" << s;
-            //} );
-
-            //connect( m_subscription, &QMqttSubscription::messageReceived,
-            //    [this] ( QMqttMessage msg ) {
-            //    handleMessage( msg.payload() );
-            //} );
-
             printf( "about to publish\n" );
-            m_client.publish( QMqttTopicName( m_topic ), "blah" );
+            m_client.publish( QMqttTopicName( m_topic ), this->mMessage.toStdString().c_str() );
             printf( "published\n" );
 
         });

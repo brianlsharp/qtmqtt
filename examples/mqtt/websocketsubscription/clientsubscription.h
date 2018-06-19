@@ -80,6 +80,7 @@ private:
     QMqttSubscription *m_subscription;
     QUrl m_url;
     QString m_topic;
+    QString mMessage;
     WebSocketIODevice m_device;
     int m_version;
 };

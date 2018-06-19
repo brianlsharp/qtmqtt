@@ -112,9 +112,8 @@ int main(int argc, char *argv[])
     if ( lPublishString.isEmpty() )
          clientsub.connectAndSubscribe();
     else
-    {
-        printf( "publishing %s\n", parser.value( publishOption ).toStdString().c_str() );
         clientsub.connectAndPublish( lPublishString );
-    }
+
+
     return a.exec();
 }
