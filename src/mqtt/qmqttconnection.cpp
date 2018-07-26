@@ -66,6 +66,12 @@ void QMqttConnection::setTransport(QIODevice *device, QMqttClient::TransportType
     if (m_transport) {
         disconnect(m_transport, &QIODevice::aboutToClose, this, &QMqttConnection::transportConnectionClosed);
         disconnect(m_transport, &QIODevice::readyRead, this, &QMqttConnection::transportReadReady);
+        auto socket = dynamic_cast<QAbstractSocket*>(m_transport);
+        if ( socket ) {
+            disconnect( socket, &QAbstractSocket::connected, this, &QMqttConnection::transportConnectionEstablished );
+            disconnect( socket, &QAbstractSocket::disconnected, this, &QMqttConnection::transportConnectionClosed );
+        }
+
         if (m_ownTransport)
             delete m_transport;
     }
@@ -76,6 +82,14 @@ void QMqttConnection::setTransport(QIODevice *device, QMqttClient::TransportType
 
     connect(m_transport, &QIODevice::aboutToClose, this, &QMqttConnection::transportConnectionClosed);
     connect(m_transport, &QIODevice::readyRead, this, &QMqttConnection::transportReadReady);
+    auto socket = dynamic_cast<QAbstractSocket*>(device);
+    if ( socket ){
+        bool ret = false;
+        ret = connect( socket, &QAbstractSocket::connected, this, &QMqttConnection::transportConnectionEstablished );
+        Q_ASSERT( ret );
+        ret = connect( socket, &QAbstractSocket::disconnected, this, &QMqttConnection::transportConnectionClosed );
+        Q_ASSERT( ret );
+    }
 }
 
 QIODevice *QMqttConnection::transport() const
@@ -153,8 +167,11 @@ bool QMqttConnection::ensureTransportOpen(const QString &sslPeerName)
         m_internalState = BrokerConnecting;
         socket->connectToHostEncrypted(m_clientPrivate->m_hostname, m_clientPrivate->m_port, sslPeerName);
 
+        printf( "ssl peerr name = %s\n", sslPeerName.toStdString().c_str() );
+
         if (!socket->waitForConnected()) {
             qWarning("Could not establish socket connection for transport");
+            printf( "error = %s\n", socket->errorString().toStdString().c_str() );
             return false;
         }
 
