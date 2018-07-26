@@ -54,6 +54,7 @@
 #include <QtCore/QDateTime>
 #include <QtMqtt/QMqttClient>
 #include <QtWidgets/QMessageBox>
+#include <QtNetwork/qsslsocket.h>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -65,7 +66,20 @@ MainWindow::MainWindow(QWidget *parent) :
     m_client->setHostname(ui->lineEditHost->text());
     m_client->setPort(ui->spinBoxPort->value());
 
-    connect(m_client, &QMqttClient::stateChanged, this, &MainWindow::updateLogStateChange);
+    socket = new QSslSocket( this );
+    connect( socket, SIGNAL( encrypted() ), this, SLOT( onSocketEncrypted() ) );
+    connect( socket, SIGNAL( stateChanged( QAbstractSocket::SocketState ) ), this, SLOT( onSocketStateChanged( QAbstractSocket::SocketState ) ) );
+    connect( socket, QOverload<const QList<QSslError> &>::of( &QSslSocket::sslErrors ),
+        [=] ( const QList<QSslError> &errors )
+    {
+        for ( QSslError lError : errors )
+            printf( "SSL Error: %s\n", lError.errorString().toStdString().c_str() );
+    } );
+
+    m_client->setTransport( socket, QMqttClient::SecureSocket );
+
+    connect( m_client, &QMqttClient::errorChanged, this, &MainWindow::onErrorChanged );
+    connect( m_client, &QMqttClient::stateChanged, this, &MainWindow::updateLogStateChange );
     connect(m_client, &QMqttClient::disconnected, this, &MainWindow::brokerDisconnected);
 
     connect(m_client, &QMqttClient::messageReceived, this, [this](const QByteArray &message, const QMqttTopicName &topic) {
@@ -87,9 +101,28 @@ MainWindow::MainWindow(QWidget *parent) :
     });
 
     connect(ui->lineEditHost, &QLineEdit::textChanged, m_client, &QMqttClient::setHostname);
-    connect(ui->spinBoxPort, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::setClientPort);
+    ui->lineEditHost->setText( "iot.eclipse.org" );
+    connect( ui->spinBoxPort, QOverload<int>::of( &QSpinBox::valueChanged ), this, &MainWindow::setClientPort );
     updateLogStateChange();
 }
+
+void MainWindow::onSocketEncrypted()
+{
+    printf( "successfully established an encrypted socket connection.\n" );
+}
+
+void MainWindow::onSocketStateChanged( QAbstractSocket::SocketState aState )
+{
+    printf( "socket state changed to %d\n", aState );
+}
+
+
+void MainWindow::onErrorChanged(  )
+{
+    printf( "MainWindow::QMqttClient error: %d\n", m_client->error() );
+}
+
+
 
 MainWindow::~MainWindow()
 {
@@ -102,7 +135,7 @@ void MainWindow::on_buttonConnect_clicked()
         ui->lineEditHost->setEnabled(false);
         ui->spinBoxPort->setEnabled(false);
         ui->buttonConnect->setText(tr("Disconnect"));
-        m_client->connectToHost();
+        m_client->connectToHostEncrypted( m_client->hostname() );
     } else {
         ui->lineEditHost->setEnabled(true);
         ui->spinBoxPort->setEnabled(true);
@@ -118,7 +151,8 @@ void MainWindow::on_buttonQuit_clicked()
 
 void MainWindow::updateLogStateChange()
 {
-    const QString content = QDateTime::currentDateTime().toString()
+    const QString content = "QMQTTClient State Changed: "
+                    + QDateTime::currentDateTime().toString()
                     + QLatin1String(": State Change")
                     + QString::number(m_client->state())
                     + QLatin1Char('\n');

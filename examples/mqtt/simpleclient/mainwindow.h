@@ -53,12 +53,15 @@
 
 #include <QMainWindow>
 #include <QMqttClient>
+#include <qsslerror.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
 }
 QT_END_NAMESPACE
+
+class QSslSocket;
 
 class MainWindow : public QMainWindow
 {
@@ -84,9 +87,17 @@ private slots:
 
     void on_buttonPing_clicked();
 
+    // ssl socket slots
+    void onSocketStateChanged( QAbstractSocket::SocketState aState );
+    void onSocketEncrypted();
+
+    // mqttClient slots
+    void onErrorChanged( );
+
 private:
     Ui::MainWindow *ui;
     QMqttClient *m_client;
+    QSslSocket *socket;
 };
 
 #endif // MAINWINDOW_H
