@@ -62,48 +62,63 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    m_client = new QMqttClient(this);
-    m_client->setHostname(ui->lineEditHost->text());
-    m_client->setPort(ui->spinBoxPort->value());
+    createSocket();
+    createClient();
 
+    connect(ui->lineEditHost, &QLineEdit::textChanged, m_client, &QMqttClient::setHostname);
+    ui->lineEditHost->setText( "iot.eclipse.org" );
+    connect( ui->spinBoxPort, QOverload<int>::of( &QSpinBox::valueChanged ), this, &MainWindow::setClientPort );
+    updateLogStateChange();
+
+    connect( ui->btn_CaCertificate, SIGNAL( clicked() ), this, SLOT( onSelectCertFileClicked() ) );
+}
+
+void MainWindow::createSocket()
+{
     socket = new QSslSocket( this );
     connect( socket, SIGNAL( encrypted() ), this, SLOT( onSocketEncrypted() ) );
     connect( socket, SIGNAL( stateChanged( QAbstractSocket::SocketState ) ), this, SLOT( onSocketStateChanged( QAbstractSocket::SocketState ) ) );
+    connect( socket, QOverload<QAbstractSocket::SocketError>::of( &QAbstractSocket::error ),
+        [=] ( QAbstractSocket::SocketError )
+    {
+        printf( "socket error: %s\n", socket->errorString().toStdString().c_str() );
+    } );
     connect( socket, QOverload<const QList<QSslError> &>::of( &QSslSocket::sslErrors ),
         [=] ( const QList<QSslError> &errors )
     {
         for ( QSslError lError : errors )
             printf( "SSL Error: %s\n", lError.errorString().toStdString().c_str() );
     } );
+}
 
+void MainWindow::createClient()
+{
+    m_client = new QMqttClient( this );
+    m_client->setHostname( ui->lineEditHost->text() );
+    m_client->setPort( ui->spinBoxPort->value() );
     m_client->setTransport( socket, QMqttClient::SecureSocket );
 
     connect( m_client, &QMqttClient::errorChanged, this, &MainWindow::onErrorChanged );
     connect( m_client, &QMqttClient::stateChanged, this, &MainWindow::updateLogStateChange );
-    connect(m_client, &QMqttClient::disconnected, this, &MainWindow::brokerDisconnected);
+    connect( m_client, &QMqttClient::disconnected, this, &MainWindow::brokerDisconnected );
 
-    connect(m_client, &QMqttClient::messageReceived, this, [this](const QByteArray &message, const QMqttTopicName &topic) {
+    connect( m_client, &QMqttClient::messageReceived, this, [this] ( const QByteArray &message, const QMqttTopicName &topic ) {
         const QString content = QDateTime::currentDateTime().toString()
-                    + QLatin1String(" Received Topic: ")
-                    + topic.name()
-                    + QLatin1String(" Message: ")
-                    + message
-                    + QLatin1Char('\n');
-        ui->editLog->insertPlainText(content);
-    });
+            + QLatin1String( " Received Topic: " )
+            + topic.name()
+            + QLatin1String( " Message: " )
+            + message
+            + QLatin1Char( '\n' );
+        ui->editLog->insertPlainText( content );
+    } );
 
-    connect(m_client, &QMqttClient::pingResponseReceived, this, [this]() {
-        ui->buttonPing->setEnabled(true);
+    connect( m_client, &QMqttClient::pingResponseReceived, this, [this] () {
+        ui->buttonPing->setEnabled( true );
         const QString content = QDateTime::currentDateTime().toString()
-                    + QLatin1String(" PingResponse")
-                    + QLatin1Char('\n');
-        ui->editLog->insertPlainText(content);
-    });
-
-    connect(ui->lineEditHost, &QLineEdit::textChanged, m_client, &QMqttClient::setHostname);
-    ui->lineEditHost->setText( "iot.eclipse.org" );
-    connect( ui->spinBoxPort, QOverload<int>::of( &QSpinBox::valueChanged ), this, &MainWindow::setClientPort );
-    updateLogStateChange();
+            + QLatin1String( " PingResponse" )
+            + QLatin1Char( '\n' );
+        ui->editLog->insertPlainText( content );
+    } );
 }
 
 void MainWindow::onSocketEncrypted()
@@ -131,12 +146,20 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_buttonConnect_clicked()
 {
-    if (m_client->state() == QMqttClient::Disconnected) {
+    if (m_client->state() == QMqttClient::Disconnected) 
+    {
+        // this is connect
         ui->lineEditHost->setEnabled(false);
         ui->spinBoxPort->setEnabled(false);
         ui->buttonConnect->setText(tr("Disconnect"));
+
+        if ( !socket->addCaCertificates( mCaCertificate ) )
+            printf( " could not successfully add server CA certificate\n" );
+
         m_client->connectToHostEncrypted( m_client->hostname() );
-    } else {
+    } 
+    else 
+    {
         ui->lineEditHost->setEnabled(true);
         ui->spinBoxPort->setEnabled(true);
         ui->buttonConnect->setText(tr("Connect"));
@@ -190,4 +213,13 @@ void MainWindow::on_buttonPing_clicked()
 {
     ui->buttonPing->setEnabled(false);
     m_client->requestPing();
+}
+
+
+#include "qfiledialog.h"
+void MainWindow::onSelectCertFileClicked()
+{
+    QString lFilename = QFileDialog::getOpenFileName( this, tr( "Select cert file" ) );
+    ui->ln_CaCertificate->setText( lFilename );
+    mCaCertificate = lFilename;
 }

@@ -78,6 +78,7 @@ private slots:
     void on_buttonConnect_clicked();
     void on_buttonQuit_clicked();
     void updateLogStateChange();
+    void onSelectCertFileClicked();
 
     void brokerDisconnected();
 
@@ -96,8 +97,14 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+
+    void createClient();
     QMqttClient *m_client;
+
+    void createSocket();
     QSslSocket *socket;
+
+    QString mCaCertificate;
 };
 
 #endif // MAINWINDOW_H
