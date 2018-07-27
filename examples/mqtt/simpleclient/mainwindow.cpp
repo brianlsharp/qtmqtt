@@ -128,11 +128,11 @@ void MainWindow::onSocketEncrypted()
     printf( "successfully established an encrypted socket connection.\n" );
 }
 
+#include <QMetaEnum>
 void MainWindow::onSocketStateChanged( QAbstractSocket::SocketState aState )
 {
-    printf( "socket state changed to %d\n", aState );
+    printf( "socket state changed to %s\n", QMetaEnum::fromType<QAbstractSocket::SocketState>().valueToKey( aState ) );
 }
-
 
 void MainWindow::onErrorChanged(  )
 {
