@@ -91,19 +91,19 @@
       <item>
        <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>CA Certificate</string>
+         <string>Client Certificate</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="ln_CaCertificate_2">
+       <widget class="QLineEdit" name="ln_clientCert">
         <property name="enabled">
          <bool>false</bool>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_2">
+       <widget class="QPushButton" name="btn_ClientCert">
         <property name="text">
          <string>Select File..</string>
         </property>
@@ -116,19 +116,19 @@
       <item>
        <widget class="QLabel" name="label_7">
         <property name="text">
-         <string>CA Certificate</string>
+         <string>Client Private Key File:</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="ln_CaCertificate_3">
+       <widget class="QLineEdit" name="ln_ClientPrivateKey">
         <property name="enabled">
          <bool>false</bool>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_3">
+       <widget class="QPushButton" name="btn_ClientPrivateKey">
         <property name="text">
          <string>Select File..</string>
         </property>

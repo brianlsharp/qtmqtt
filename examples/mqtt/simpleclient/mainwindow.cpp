@@ -71,6 +71,8 @@ MainWindow::MainWindow(QWidget *parent) :
     updateLogStateChange();
 
     connect( ui->btn_CaCertificate, SIGNAL( clicked() ), this, SLOT( onSelectCertFileClicked() ) );
+    connect( ui->btn_ClientCert, SIGNAL( clicked() ), this, SLOT( onSelectClientCertificate() ) );
+    connect( ui->btn_ClientPrivateKey, SIGNAL( clicked() ), this, SLOT( onSelectClientPrivateKey() ) );
 }
 
 void MainWindow::createSocket()
@@ -153,7 +155,9 @@ void MainWindow::on_buttonConnect_clicked()
         ui->spinBoxPort->setEnabled(false);
         ui->buttonConnect->setText(tr("Disconnect"));
 
-        if ( !socket->addCaCertificates( mCaCertificate ) )
+        socket->setLocalCertificate( mClientCertificateFilename );
+        socket->setPrivateKey( mClientPrivateKeyFilename );
+        if ( !socket->addCaCertificates( mCaCertificateFilename ) )
             printf( " could not successfully add server CA certificate\n" );
 
         m_client->connectToHostEncrypted( m_client->hostname() );
@@ -221,5 +225,20 @@ void MainWindow::onSelectCertFileClicked()
 {
     QString lFilename = QFileDialog::getOpenFileName( this, tr( "Select cert file" ) );
     ui->ln_CaCertificate->setText( lFilename );
-    mCaCertificate = lFilename;
+    mCaCertificateFilename = lFilename;
+}
+
+void MainWindow::onSelectClientCertificate()
+{
+    QString lFilename = QFileDialog::getOpenFileName( this, tr( "Select cert file" ) );
+    ui->ln_clientCert->setText( lFilename );
+    mClientCertificateFilename = lFilename;
+}
+
+
+void MainWindow::onSelectClientPrivateKey()
+{
+    QString lFilename = QFileDialog::getOpenFileName( this, tr( "Select cert file" ) );
+    ui->ln_ClientPrivateKey->setText( lFilename );
+    mClientPrivateKeyFilename = lFilename;
 }

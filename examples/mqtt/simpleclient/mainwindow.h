@@ -78,7 +78,10 @@ private slots:
     void on_buttonConnect_clicked();
     void on_buttonQuit_clicked();
     void updateLogStateChange();
+
     void onSelectCertFileClicked();
+    void onSelectClientCertificate();
+    void onSelectClientPrivateKey();
 
     void brokerDisconnected();
 
@@ -98,13 +101,18 @@ private slots:
 private:
     Ui::MainWindow *ui;
 
+    // mqtt client
     void createClient();
     QMqttClient *m_client;
 
+    // ssl socket
     void createSocket();
     QSslSocket *socket;
 
-    QString mCaCertificate;
+    // cert junk
+    QString mCaCertificateFilename;
+    QString mClientCertificateFilename;
+    QString mClientPrivateKeyFilename;
 };
 
 #endif // MAINWINDOW_H
