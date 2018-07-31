@@ -54,7 +54,7 @@
 #include <QtCore/QDateTime>
 #include <QtMqtt/QMqttClient>
 #include <QtWidgets/QMessageBox>
-#include <QtNetwork/qsslsocket.h>
+#include "SslSocket.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -77,25 +77,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
 void MainWindow::createSocket()
 {
-    socket = new QSslSocket( this );
-    connect( socket, SIGNAL( encrypted() ), this, SLOT( onSocketEncrypted() ) );
-    connect( socket, SIGNAL( stateChanged( QAbstractSocket::SocketState ) ), this, SLOT( onSocketStateChanged( QAbstractSocket::SocketState ) ) );
-    connect( socket, QOverload<QAbstractSocket::SocketError>::of( &QAbstractSocket::error ),
-        [=] ( QAbstractSocket::SocketError )
-    {
-        printf( "socket error: %s\n", socket->errorString().toStdString().c_str() );
-    } );
-    connect( socket, QOverload<const QList<QSslError> &>::of( &QSslSocket::sslErrors ),
-        [=] ( const QList<QSslError> &errors )
-    {
-        for ( QSslError lError : errors )
-            printf( "SSL Error: %s\n", lError.errorString().toStdString().c_str() );
-    } );
+    socket = new PC::SslSocket( this );
 }
 
 void MainWindow::createClient()
 {
-    m_client = new QMqttClient( this );
+    m_client = new PC::MqttClient( this );
     m_client->setHostname( ui->lineEditHost->text() );
     m_client->setPort( ui->spinBoxPort->value() );
     m_client->setTransport( socket, QMqttClient::SecureSocket );
@@ -123,16 +110,7 @@ void MainWindow::createClient()
     } );
 }
 
-void MainWindow::onSocketEncrypted()
-{
-    printf( "successfully established an encrypted socket connection.\n" );
-}
 
-#include <QMetaEnum>
-void MainWindow::onSocketStateChanged( QAbstractSocket::SocketState aState )
-{
-    printf( "socket state changed to %s\n", QMetaEnum::fromType<QAbstractSocket::SocketState>().valueToKey( aState ) );
-}
 
 void MainWindow::onErrorChanged(  )
 {

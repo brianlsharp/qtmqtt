@@ -52,7 +52,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QMqttClient>
+#include "MqttClient.h"
 #include <qsslerror.h>
 
 QT_BEGIN_NAMESPACE
@@ -91,9 +91,6 @@ private slots:
 
     void on_buttonPing_clicked();
 
-    // ssl socket slots
-    void onSocketStateChanged( QAbstractSocket::SocketState aState );
-    void onSocketEncrypted();
 
     // mqttClient slots
     void onErrorChanged( );
@@ -103,7 +100,7 @@ private:
 
     // mqtt client
     void createClient();
-    QMqttClient *m_client;
+    PC::MqttClient *m_client;
 
     // ssl socket
     void createSocket();
