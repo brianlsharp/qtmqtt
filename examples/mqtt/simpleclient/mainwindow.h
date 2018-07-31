@@ -92,8 +92,6 @@ private slots:
     void on_buttonPing_clicked();
 
 
-    // mqttClient slots
-    void onErrorChanged( );
 
 private:
     Ui::MainWindow *ui;

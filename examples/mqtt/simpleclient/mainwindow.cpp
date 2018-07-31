@@ -83,11 +83,8 @@ void MainWindow::createSocket()
 void MainWindow::createClient()
 {
     m_client = new PC::MqttClient( this );
-    m_client->setHostname( ui->lineEditHost->text() );
-    m_client->setPort( ui->spinBoxPort->value() );
     m_client->setTransport( socket, QMqttClient::SecureSocket );
 
-    connect( m_client, &QMqttClient::errorChanged, this, &MainWindow::onErrorChanged );
     connect( m_client, &QMqttClient::stateChanged, this, &MainWindow::updateLogStateChange );
     connect( m_client, &QMqttClient::disconnected, this, &MainWindow::brokerDisconnected );
 
@@ -111,14 +108,6 @@ void MainWindow::createClient()
 }
 
 
-
-void MainWindow::onErrorChanged(  )
-{
-    printf( "MainWindow::QMqttClient error: %d\n", m_client->error() );
-}
-
-
-
 MainWindow::~MainWindow()
 {
     delete ui;
@@ -133,6 +122,8 @@ void MainWindow::on_buttonConnect_clicked()
         ui->spinBoxPort->setEnabled(false);
         ui->buttonConnect->setText(tr("Disconnect"));
 
+        m_client->setHostname( ui->lineEditHost->text() );
+        m_client->setPort( ui->spinBoxPort->value() );
         socket->setLocalCertificate( mClientCertificateFilename );
         socket->setPrivateKey( mClientPrivateKeyFilename );
         if ( !socket->addCaCertificates( mCaCertificateFilename ) )

@@ -18,9 +18,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+		MqttClient.cpp \
+		SslSocket.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+		    MqttClient.h \
+			SslSocket.h
+
 FORMS    += mainwindow.ui
 
 target.path = $$[QT_INSTALL_EXAMPLES]/mqtt/simpleclient
